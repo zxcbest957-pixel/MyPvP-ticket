@@ -774,6 +774,51 @@ class TicketBot(commands.Bot):
         logger.info(f"Bot connected as {self.user.name} ({self.user.id})")
         logger.info("Ticket bot is running and persistent views have been loaded.")
 
+        # Auto-send the ticket panel to the specified channel if it doesn't already exist
+        channel_id = 1514590955397709834
+        channel = self.get_channel(channel_id)
+        if not channel:
+            try:
+                channel = await self.fetch_channel(channel_id)
+            except Exception as e:
+                logger.error(f"Could not fetch target channel {channel_id}: {e}")
+                return
+
+        if channel:
+            try:
+                # Check recent messages to see if the panel is already there
+                already_exists = False
+                async for message in channel.history(limit=50):
+                    if message.author.id == self.user.id and message.embeds:
+                        for embed in message.embeds:
+                            if embed.title == "📩 Clan Application Portal / Портал заявок в клан":
+                                already_exists = True
+                                break
+                    if already_exists:
+                        break
+
+                if not already_exists:
+                    embed = discord.Embed(
+                        title="📩 Clan Application Portal / Портал заявок в клан",
+                        description=(
+                            "Welcome! If you want to join our Roblox Bedwars clan, please create an application ticket.\n\n"
+                            "Добро пожаловать! Если вы хотите вступить в наш клан по Roblox Bedwars, пожалуйста, создайте тикет заявки.\n\n"
+                            "👉 Click the button below / Нажмите кнопку ниже"
+                        ),
+                        color=discord.Color.purple()
+                    )
+                    guild = channel.guild
+                    embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
+                    embed.set_footer(text="Clan Application System • Click below to start")
+                    
+                    view = TicketPanelView()
+                    await channel.send(embed=embed, view=view)
+                    logger.info(f"Successfully auto-sent ticket panel to channel {channel_id}")
+                else:
+                    logger.info(f"Ticket panel already exists in channel {channel_id}. Skipping send.")
+            except Exception as e:
+                logger.error(f"Failed to auto-send panel to channel {channel_id}: {e}")
+
     async def on_message(self, message: discord.Message):
         # Ignore bot messages
         if message.author.bot:
