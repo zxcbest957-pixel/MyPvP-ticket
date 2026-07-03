@@ -23,15 +23,9 @@ load_dotenv()
 # ----------------- Localization Dictionary -----------------
 LOCALIZATION = {
     "en": {
-        "welcome_title": "⚔️ Clan Application Ticket",
-        "welcome_desc": (
-            "Welcome {mention} to your clan application ticket!\n\n"
-            "To submit your application for the Roblox Bedwars clan, please follow these steps:\n\n"
-            "1️⃣ Click the **Enter Application Details** button below to submit your Roblox username and weekly Bedwars contribution capability.\n"
-            "2️⃣ After submitting your details, upload a screenshot showing your statistics in **Roblox Bedwars** directly in this channel.\n\n"
-            "*Our clan staff will review your stats and contribution as soon as possible.*"
-        ),
-        "btn_enter_details": "Enter Application Details",
+        "welcome_title": "⚔️ Clan Application",
+        "welcome_desc": "Welcome {mention}! Please click the button below to submit your Roblox stats and weekly contribution.",
+        "btn_enter_details": "✍️ Submit Stats",
         "btn_close_ticket": "Close Ticket",
         "modal_title": "Clan Application Submission",
         "modal_roblox_lbl": "Roblox Username",
@@ -45,7 +39,7 @@ LOCALIZATION = {
             "Please now **upload a screenshot** of your **Roblox Bedwars statistics** in this channel.\n"
             "Simply attach the image and send it as a message."
         ),
-        "username_first_warning": "⚠️ {mention}, please enter your Roblox details first by clicking the **Enter Application Details** button before uploading your screenshot.",
+        "username_first_warning": "⚠️ {mention}, please enter your Roblox details first by clicking the **✍️ Submit Stats** button before uploading your screenshot.",
         "stats_submitted_title": "📥 Details Submitted",
         "stats_submitted_desc": "Your stats screenshot has been received and is now under review by staff. Please wait.",
         "admin_review_title": "⚔️ Clan Application Review Required",
@@ -67,15 +61,9 @@ LOCALIZATION = {
         "closing_msg": "🔒 **Closing ticket...** This channel will be deleted in 5 seconds."
     },
     "ru": {
-        "welcome_title": "⚔️ Тикет заявки в клан",
-        "welcome_desc": (
-            "Добро пожаловать {mention} в ваш тикет заявки в клан!\n\n"
-            "Чтобы подать заявку в клан по Roblox Bedwars, выполните следующие шаги:\n\n"
-            "1️⃣ Нажмите кнопку **Ввести данные заявки** ниже, чтобы указать ваш никнейм Roblox и еженедельный вклад в клан.\n"
-            "2️⃣ После отправки данных загрузите скриншот с вашей статистикой в **Roblox Bedwars** прямо в этот канал.\n\n"
-            "*Персонал клана рассмотрит вашу статистику и вклад как можно скорее.*"
-        ),
-        "btn_enter_details": "Ввести данные заявки",
+        "welcome_title": "⚔️ Заявка в клан",
+        "welcome_desc": "Добро пожаловать, {mention}! Пожалуйста, нажмите кнопку ниже, чтобы отправить вашу статистику Roblox и вклад.",
+        "btn_enter_details": "✍️ Подать статистику",
         "btn_close_ticket": "Закрыть тикет",
         "modal_title": "Подача заявки в клан",
         "modal_roblox_lbl": "Никнейм в Roblox",
@@ -89,7 +77,7 @@ LOCALIZATION = {
             "Пожалуйста, теперь **загрузите скриншот** вашей **статистики в Roblox Bedwars** в этот канал.\n"
             "Просто прикрепите изображение к сообщению."
         ),
-        "username_first_warning": "⚠️ {mention}, пожалуйста, сначала введите данные вашего аккаунта Roblox, нажав на кнопку **Ввести данные заявки** перед загрузкой скриншота.",
+        "username_first_warning": "⚠️ {mention}, пожалуйста, сначала введите данные вашего аккаунта Roblox, нажав на кнопку **✍️ Подать статистику** перед загрузкой скриншота.",
         "stats_submitted_title": "📥 Данные отправлены",
         "stats_submitted_desc": "Скриншот вашей статистики получен и находится на рассмотрении персонала. Пожалуйста, подождите.",
         "admin_review_title": "⚔️ Требуется проверка заявки в клан",
@@ -368,13 +356,6 @@ async def handle_lang_selection(interaction: discord.Interaction, lang: str):
         await interaction.response.send_message("❌ Only the applicant can select the language.", ephemeral=True)
         return
 
-    # Acknowledge and delete selection prompt
-    await interaction.response.defer()
-    try:
-        await interaction.message.delete()
-    except Exception as e:
-        logger.warning(f"Could not delete language select message: {e}")
-
     # Update topic language state asynchronously
     new_topic = format_topic_state(
         user_id=interaction.user.id,
@@ -402,6 +383,19 @@ async def handle_lang_selection(interaction: discord.Interaction, lang: str):
         )
     except Exception as e:
         logger.error(f"Failed to send greeting message: {e}")
+
+    # Immediately pop up the application details modal for the user
+    try:
+        modal = ClanApplicationModal(lang=lang)
+        await interaction.response.send_modal(modal)
+    except Exception as e:
+        logger.error(f"Failed to launch details modal: {e}")
+
+    # Delete the language selection prompt message
+    try:
+        await interaction.message.delete()
+    except Exception as e:
+        logger.warning(f"Could not delete language select message: {e}")
 
 # ----------------- Persistent Views -----------------
 
@@ -601,9 +595,8 @@ class TicketActionView(discord.ui.View):
         super().__init__(timeout=None)
         strings = LOCALIZATION[lang]
         self.enter_nickname.label = strings["btn_enter_details"]
-        self.close_ticket.label = strings["btn_close_ticket"]
 
-    @discord.ui.button(label="Enter Application Details", style=discord.ButtonStyle.primary, emoji="✍️", custom_id="ticket_action:enter_username")
+    @discord.ui.button(label="Submit Stats", style=discord.ButtonStyle.success, emoji="✍️", custom_id="ticket_action:enter_username")
     async def enter_nickname(self, interaction: discord.Interaction, button: discord.ui.Button):
         channel = interaction.channel
         state = parse_topic_state(channel.topic) if hasattr(channel, "topic") and channel.topic else {}
@@ -616,10 +609,6 @@ class TicketActionView(discord.ui.View):
         lang = state.get("lang", "en")
         modal = ClanApplicationModal(lang=lang)
         await interaction.response.send_modal(modal)
-
-    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="ticket_action:close_ticket")
-    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await handle_close_ticket(interaction)
 
 class AdminReviewView(discord.ui.View):
     def __init__(self):
