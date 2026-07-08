@@ -23,15 +23,9 @@ load_dotenv()
 # ----------------- Localization Dictionary -----------------
 LOCALIZATION = {
     "en": {
-        "welcome_title": "⚔️ Clan Application Ticket",
-        "welcome_desc": (
-            "Welcome {mention} to your clan application ticket!\n\n"
-            "To submit your application for the Roblox Bedwars clan, please follow these steps:\n\n"
-            "1️⃣ Click the **Enter Application Details** button below to submit your Roblox username and weekly Bedwars contribution capability.\n"
-            "2️⃣ After submitting your details, upload a screenshot showing your statistics in **Roblox Bedwars** directly in this channel.\n\n"
-            "*Our clan staff will review your stats and contribution as soon as possible.*"
-        ),
-        "btn_enter_details": "Enter Application Details",
+        "welcome_title": "⚔️ Clan Application",
+        "welcome_desc": "Welcome {mention}! Please click the button below to submit your Roblox stats and weekly contribution.",
+        "btn_enter_details": "✍️ Submit Stats",
         "btn_close_ticket": "Close Ticket",
         "modal_title": "Clan Application Submission",
         "modal_roblox_lbl": "Roblox Username",
@@ -45,7 +39,7 @@ LOCALIZATION = {
             "Please now **upload a screenshot** of your **Roblox Bedwars statistics** in this channel.\n"
             "Simply attach the image and send it as a message."
         ),
-        "username_first_warning": "⚠️ {mention}, please enter your Roblox details first by clicking the **Enter Application Details** button before uploading your screenshot.",
+        "username_first_warning": "⚠️ {mention}, please enter your Roblox details first by clicking the **✍️ Submit Stats** button before uploading your screenshot.",
         "stats_submitted_title": "📥 Details Submitted",
         "stats_submitted_desc": "Your stats screenshot has been received and is now under review by staff. Please wait.",
         "admin_review_title": "⚔️ Clan Application Review Required",
@@ -67,15 +61,9 @@ LOCALIZATION = {
         "closing_msg": "🔒 **Closing ticket...** This channel will be deleted in 5 seconds."
     },
     "ru": {
-        "welcome_title": "⚔️ Тикет заявки в клан",
-        "welcome_desc": (
-            "Добро пожаловать {mention} в ваш тикет заявки в клан!\n\n"
-            "Чтобы подать заявку в клан по Roblox Bedwars, выполните следующие шаги:\n\n"
-            "1️⃣ Нажмите кнопку **Ввести данные заявки** ниже, чтобы указать ваш никнейм Roblox и еженедельный вклад в клан.\n"
-            "2️⃣ После отправки данных загрузите скриншот с вашей статистикой в **Roblox Bedwars** прямо в этот канал.\n\n"
-            "*Персонал клана рассмотрит вашу статистику и вклад как можно скорее.*"
-        ),
-        "btn_enter_details": "Ввести данные заявки",
+        "welcome_title": "⚔️ Заявка в клан",
+        "welcome_desc": "Добро пожаловать, {mention}! Пожалуйста, нажмите кнопку ниже, чтобы отправить вашу статистику Roblox и вклад.",
+        "btn_enter_details": "✍️ Подать статистику",
         "btn_close_ticket": "Закрыть тикет",
         "modal_title": "Подача заявки в клан",
         "modal_roblox_lbl": "Никнейм в Roblox",
@@ -89,7 +77,7 @@ LOCALIZATION = {
             "Пожалуйста, теперь **загрузите скриншот** вашей **статистики в Roblox Bedwars** в этот канал.\n"
             "Просто прикрепите изображение к сообщению."
         ),
-        "username_first_warning": "⚠️ {mention}, пожалуйста, сначала введите данные вашего аккаунта Roblox, нажав на кнопку **Ввести данные заявки** перед загрузкой скриншота.",
+        "username_first_warning": "⚠️ {mention}, пожалуйста, сначала введите данные вашего аккаунта Roblox, нажав на кнопку **✍️ Подать статистику** перед загрузкой скриншота.",
         "stats_submitted_title": "📥 Данные отправлены",
         "stats_submitted_desc": "Скриншот вашей статистики получен и находится на рассмотрении персонала. Пожалуйста, подождите.",
         "admin_review_title": "⚔️ Требуется проверка заявки в клан",
@@ -128,9 +116,9 @@ def parse_topic_state(topic: str):
             state[key.strip().lower()] = val.strip()
     return state
 
-def format_topic_state(user_id, roblox_username="Not Provided", weekly_contrib="Not Provided", status="Awaiting Details", lang="en", image_url=None):
+def format_topic_state(user_id, roblox_username="Not Provided", weekly_contrib="Not Provided", status="Awaiting Details", lang="en", image_url=None, clan="MyPvP"):
     """Formats key-value pairs into a string for the channel topic."""
-    topic = f"User ID: {user_id} | Roblox: {roblox_username} | Contribution: {weekly_contrib} | Status: {status} | Lang: {lang}"
+    topic = f"User ID: {user_id} | Roblox: {roblox_username} | Contribution: {weekly_contrib} | Status: {status} | Lang: {lang} | Clan: {clan}"
     if image_url:
         topic += f" | Image: {image_url}"
     return topic
@@ -253,9 +241,53 @@ async def is_staff(interaction: discord.Interaction):
         
     return False
 
+def get_custom_emoji_str(guild, name, fallback="•"):
+    if guild:
+        for emoji in guild.emojis:
+            if name.lower() in emoji.name.lower():
+                return str(emoji)
+    return fallback
+
+def get_custom_emoji_by_keywords(guild, keywords, fallback):
+    if guild:
+        for emoji in guild.emojis:
+            for kw in keywords:
+                if kw.lower() in emoji.name.lower():
+                    return str(emoji)
+    return fallback
+
+def get_requirements_description(guild):
+    silver_emoji = get_custom_emoji_by_keywords(guild, ["silver", "83076295592972"], "<:staticassetsupload83076295592972:1524530645722726460>")
+    gold_emoji = get_custom_emoji_by_keywords(guild, ["gold", "41258391230736"], "<:staticassetsupload41258391230736:1524530692380168272>")
+    plat_emoji = get_custom_emoji_by_keywords(guild, ["platinum", "54071platinumrank"], "<:54071platinumrank:1524530710583574608>")
+    dia_emoji = get_custom_emoji_by_keywords(guild, ["diamond", "7685diamondrankrobloxbedwars"], "<:7685diamondrankrobloxbedwars:1524530725502849094>")
+    emerald_emoji = get_custom_emoji_by_keywords(guild, ["emerald", "emerald_rank_icon"], "<:Emerald_Rank_Icon:1524530743139762237>")
+    nightmare_emoji = get_custom_emoji_by_keywords(guild, ["nightmare", "nightmare_rank_icon1"], "<:Nightmare_Rank_Icon1:1524530761569402980>")
+    clan_emoji = get_custom_emoji_by_keywords(guild, ["clan"], "<:Clan:1332475140495376476>")
+
+    desc = (
+        f"🏆 **Clan Requirements** {clan_emoji} 🏆\n\n"
+        "✨ **MyPvP (Main Clan)**\n"
+        f" └ {silver_emoji} **Silver** — 1250 win\n"
+        f" └ {gold_emoji} **Gold** — 1000 win\n"
+        f" └ {plat_emoji} **Platinum 1** — bypass\n"
+        f" └ {dia_emoji} **Diamond+** — bypass\n"
+        f" └ {emerald_emoji} **Emerald 1+** — bypass\n"
+        f" └ {nightmare_emoji} **Nightmare** — bypass\n\n"
+        "⚡ **KS (Second Clan)**\n"
+        f" └ {silver_emoji} **Silver** — 500 win\n"
+        f" └ {gold_emoji} **Gold** — 250 win\n"
+        f" └ {plat_emoji} **Platinum 1** — bypass\n"
+        f" └ {dia_emoji} **Diamond+** — bypass\n"
+        f" └ {emerald_emoji} **Emerald 1+** — bypass\n"
+        f" └ {nightmare_emoji} **Nightmare** — bypass\n\n"
+        "👉 **Select a clan below to submit your application:**"
+    )
+    return desc
+
 # ----------------- Logging and Lifecycle -----------------
 
-async def log_ticket_action(guild, action, user, channel, roblox_username=None, weekly_contrib=None, staff=None, image_url=None):
+async def log_ticket_action(guild, action, user, channel, roblox_username=None, weekly_contrib=None, staff=None, image_url=None, clan=None):
     """Logs ticket events (creation, approval, closure) to the log channel."""
     log_channel = await get_or_create_log_channel(guild)
     if not log_channel:
@@ -269,6 +301,13 @@ async def log_ticket_action(guild, action, user, channel, roblox_username=None, 
     user_val = f"{user.mention} ({user.name}#{user.discriminator or '0'})" if hasattr(user, 'mention') else str(user)
     embed.add_field(name="Applicant", value=user_val, inline=True)
     embed.add_field(name="Channel Name", value=channel.name, inline=True)
+    
+    # Try to resolve clan name
+    if not clan and hasattr(channel, "topic") and channel.topic:
+        state = parse_topic_state(channel.topic)
+        clan = state.get("clan")
+    if clan:
+        embed.add_field(name="Clan", value=f"**{clan}**", inline=True)
     
     if roblox_username:
         embed.add_field(name="Roblox Username", value=roblox_username, inline=True)
@@ -363,6 +402,7 @@ async def handle_lang_selection(interaction: discord.Interaction, lang: str):
     channel = interaction.channel
     state = parse_topic_state(channel.topic) if hasattr(channel, "topic") and channel.topic else {}
     user_id_str = state.get("user id")
+    clan = state.get("clan", "MyPvP")
 
     if not user_id_str or user_id_str != str(interaction.user.id):
         await interaction.response.send_message("❌ Only the applicant can select the language.", ephemeral=True)
@@ -371,7 +411,8 @@ async def handle_lang_selection(interaction: discord.Interaction, lang: str):
     # Update topic language state asynchronously
     new_topic = format_topic_state(
         user_id=interaction.user.id,
-        lang=lang
+        lang=lang,
+        clan=clan
     )
     asyncio.create_task(edit_channel_topic_safe(channel, new_topic))
 
@@ -379,10 +420,10 @@ async def handle_lang_selection(interaction: discord.Interaction, lang: str):
     strings = LOCALIZATION[lang]
     embed = discord.Embed(
         title=strings["welcome_title"],
-        description=strings["welcome_desc"].format(mention=interaction.user.mention),
+        description=strings["welcome_desc"].format(mention=interaction.user.mention) + f"\n\n**Selected Clan / Выбранный клан:** {clan}",
         color=discord.Color.gold()
     )
-    embed.set_footer(text="Clan Application System • Powered by Antigravity")
+    embed.set_footer(text="Clan Application System")
 
     # Render view with localized labels
     view = TicketActionView(lang=lang)
@@ -411,12 +452,56 @@ async def handle_lang_selection(interaction: discord.Interaction, lang: str):
 
 # ----------------- Persistent Views -----------------
 
-class TicketPanelView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
+class TicketClanSelect(discord.ui.Select):
+    def __init__(self, guild=None):
+        mypvp_emoji = "🔥"
+        ks_emoji = "⚡"
+        if guild:
+            # Look for animated emojis in the guild
+            for emoji in guild.emojis:
+                if emoji.animated and "fire" in emoji.name.lower():
+                    mypvp_emoji = emoji
+                    break
+            for emoji in guild.emojis:
+                if emoji.animated and ("spark" in emoji.name.lower() or "blue" in emoji.name.lower() or "light" in emoji.name.lower() or "ks" in emoji.name.lower()):
+                    ks_emoji = emoji
+                    break
+            # Fallback to any animated emoji if specific ones not found
+            if mypvp_emoji == "🔥":
+                for emoji in guild.emojis:
+                    if emoji.animated:
+                        mypvp_emoji = emoji
+                        break
+            if ks_emoji == "⚡":
+                for emoji in guild.emojis:
+                    if emoji.animated and emoji != mypvp_emoji:
+                        ks_emoji = emoji
+                        break
 
-    @discord.ui.button(label="Apply to Clan", style=discord.ButtonStyle.success, emoji="⚔️", custom_id="ticket_panel:create")
-    async def create_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        options = [
+            discord.SelectOption(
+                label="MyPvP",
+                description="Main Clan",
+                value="MyPvP",
+                emoji=mypvp_emoji
+            ),
+            discord.SelectOption(
+                label="KS",
+                description="Second Clan",
+                value="KS",
+                emoji=ks_emoji
+            )
+        ]
+        super().__init__(
+            placeholder="Select a clan to join...",
+            min_values=1,
+            max_values=1,
+            options=options,
+            custom_id="ticket_panel:select_clan"
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        clan = self.values[0]
         guild = interaction.guild
 
         # Auto-fetch or create category and staff role
@@ -479,7 +564,7 @@ class TicketPanelView(discord.ui.View):
                 read_message_history=True
             )
 
-        channel_name = f"apply-{interaction.user.name}"
+        channel_name = f"{clan}-{interaction.user.name}"
         channel_name = "".join(c for c in channel_name if c.isalnum() or c in "-_").lower()
 
         try:
@@ -487,7 +572,7 @@ class TicketPanelView(discord.ui.View):
                 name=channel_name,
                 category=category,
                 overwrites=overwrites,
-                topic=format_topic_state(interaction.user.id)
+                topic=format_topic_state(interaction.user.id, clan=clan)
             )
         except Exception as e:
             logger.error(f"Failed to create ticket channel: {e}")
@@ -519,13 +604,19 @@ class TicketPanelView(discord.ui.View):
             guild=guild,
             action="Created",
             user=interaction.user,
-            channel=ticket_channel
+            channel=ticket_channel,
+            clan=clan
         )
 
         await interaction.followup.send(
             f"✅ Application ticket created! Go to {ticket_channel.mention} to continue.",
             ephemeral=True
         )
+
+class TicketPanelView(discord.ui.View):
+    def __init__(self, guild=None):
+        super().__init__(timeout=None)
+        self.add_item(TicketClanSelect(guild=guild))
 
 class LanguageSelectionView(discord.ui.View):
     def __init__(self):
@@ -576,6 +667,7 @@ class ClanApplicationModal(discord.ui.Modal):
         state = parse_topic_state(channel.topic)
         user_id_str = state.get("user id")
         lang = state.get("lang", "en")
+        clan = state.get("clan", "MyPvP")
         strings = LOCALIZATION[lang]
         
         if not user_id_str or user_id_str != str(interaction.user.id):
@@ -591,7 +683,8 @@ class ClanApplicationModal(discord.ui.Modal):
             roblox_username=username,
             weekly_contrib=contribution,
             status="Awaiting Screenshot",
-            lang=lang
+            lang=lang,
+            clan=clan
         )
         asyncio.create_task(edit_channel_topic_safe(channel, new_topic))
 
@@ -607,9 +700,8 @@ class TicketActionView(discord.ui.View):
         super().__init__(timeout=None)
         strings = LOCALIZATION[lang]
         self.enter_nickname.label = strings["btn_enter_details"]
-        self.close_ticket.label = strings["btn_close_ticket"]
 
-    @discord.ui.button(label="Enter Application Details", style=discord.ButtonStyle.primary, emoji="✍️", custom_id="ticket_action:enter_username")
+    @discord.ui.button(label="Submit Stats", style=discord.ButtonStyle.success, emoji="✍️", custom_id="ticket_action:enter_username")
     async def enter_nickname(self, interaction: discord.Interaction, button: discord.ui.Button):
         channel = interaction.channel
         state = parse_topic_state(channel.topic) if hasattr(channel, "topic") and channel.topic else {}
@@ -622,10 +714,6 @@ class TicketActionView(discord.ui.View):
         lang = state.get("lang", "en")
         modal = ClanApplicationModal(lang=lang)
         await interaction.response.send_modal(modal)
-
-    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="ticket_action:close_ticket")
-    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await handle_close_ticket(interaction)
 
 class AdminReviewView(discord.ui.View):
     def __init__(self):
@@ -643,6 +731,7 @@ class AdminReviewView(discord.ui.View):
         state = parse_topic_state(channel.topic) if hasattr(channel, "topic") and channel.topic else {}
         user_id_str = state.get("user id")
         lang = state.get("lang", "en")
+        clan = state.get("clan", "MyPvP")
         strings = LOCALIZATION[lang]
         
         # Retrieve details from memory or state
@@ -712,7 +801,8 @@ class AdminReviewView(discord.ui.View):
             roblox_username=roblox_username,
             weekly_contrib=weekly_contrib,
             staff=interaction.user,
-            image_url=image_url
+            image_url=image_url,
+            clan=clan
         )
 
     @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="admin_review:close")
@@ -779,6 +869,10 @@ class TicketBot(commands.Bot):
     async def on_ready(self):
         logger.info(f"Bot connected as {self.user.name} ({self.user.id})")
         logger.info("Ticket bot is running and persistent views have been loaded.")
+        
+        # Log all guild emojis for debugging
+        for guild in self.guilds:
+            logger.info(f"Guild: {guild.name} has emojis: {[(e.name, e.id, e.animated) for e in guild.emojis]}")
 
         # Auto-send the ticket panel to the specified channel if it doesn't already exist
         channel_id = 1514590955397709834
@@ -793,35 +887,54 @@ class TicketBot(commands.Bot):
         if channel:
             try:
                 # Check recent messages to see if the panel is already there
-                already_exists = False
+                existing_message = None
                 async for message in channel.history(limit=50):
                     if message.author.id == self.user.id and message.embeds:
                         for embed in message.embeds:
-                            if embed.title == "📩 Clan Application Portal / Портал заявок в клан":
-                                already_exists = True
+                            if "Join A Clan" in embed.title or "Clan Application Portal" in embed.title:
+                                existing_message = message
                                 break
-                    if already_exists:
+                    if existing_message:
                         break
-
-                if not already_exists:
-                    embed = discord.Embed(
-                        title="📩 Clan Application Portal / Портал заявок в клан",
-                        description=(
-                            "Welcome! If you want to join our Roblox Bedwars clan, please create an application ticket.\n\n"
-                            "Добро пожаловать! Если вы хотите вступить в наш клан по Roblox Bedwars, пожалуйста, создайте тикет заявки.\n\n"
-                            "👉 Click the button below / Нажмите кнопку ниже"
-                        ),
-                        color=discord.Color.purple()
-                    )
-                    guild = channel.guild
-                    embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
-                    embed.set_footer(text="Clan Application System • Click below to start")
+ 
+                guild = channel.guild
+                embed = discord.Embed(
+                    title="⚔️ Join A Clan",
+                    description=get_requirements_description(guild),
+                    color=discord.Color.purple()
+                )
+                embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
+                embed.set_footer(text="Clan Application System")
+                
+                file = None
+                if os.path.exists("atowu2.gif"):
+                    file = discord.File("atowu2.gif", filename="atowu2.gif")
+                    embed.set_image(url="attachment://atowu2.gif")
                     
-                    view = TicketPanelView()
-                    await channel.send(embed=embed, view=view)
-                    logger.info(f"Successfully auto-sent ticket panel to channel {channel_id}")
+                view = TicketPanelView(guild=guild)
+                if existing_message:
+                    try:
+                        if file:
+                            await existing_message.edit(embed=embed, attachments=[file], view=view)
+                        else:
+                            await existing_message.edit(embed=embed, view=view)
+                        logger.info(f"Successfully updated existing ticket panel in channel {channel_id}")
+                    except Exception as edit_err:
+                        logger.warning(f"Failed to edit existing panel, deleting and sending new: {edit_err}")
+                        try:
+                            await existing_message.delete()
+                        except Exception:
+                            pass
+                        if file:
+                            await channel.send(embed=embed, file=file, view=view)
+                        else:
+                            await channel.send(embed=embed, view=view)
                 else:
-                    logger.info(f"Ticket panel already exists in channel {channel_id}. Skipping send.")
+                    if file:
+                        await channel.send(embed=embed, file=file, view=view)
+                    else:
+                        await channel.send(embed=embed, view=view)
+                    logger.info(f"Successfully auto-sent ticket panel to channel {channel_id}")
             except Exception as e:
                 logger.error(f"Failed to auto-send panel to channel {channel_id}: {e}")
 
@@ -899,50 +1012,72 @@ class TicketBot(commands.Bot):
 
         review_embed = discord.Embed(
             title="⚔️ Clan Application Review Required / Требуется проверка заявки",
-            description=f"User {message.author.mention} has submitted clan application details.",
+            description=f"User {message.author.mention} has submitted clan application details for **{clan}**.",
             color=discord.Color.orange()
         )
+        review_embed.add_field(name="Clan / Клан", value=f"**{clan}**", inline=True)
         review_embed.add_field(name="Discord Account / Аккаунт", value=f"{message.author.mention} ({message.author})", inline=True)
         review_embed.add_field(name="Roblox Username / Никнейм", value=f"**{roblox_username}**", inline=True)
         review_embed.add_field(name="Weekly Contribution / Вклад", value=weekly_contrib, inline=False)
         review_embed.set_image(url=attachment.url)
         review_embed.set_footer(text=f"Ticket Channel: #{channel.name}")
         review_embed.timestamp = discord.utils.utcnow()
-
+ 
         review_view = AdminReviewView()
         try:
             await channel.send(content=f"🔔 {staff_role_mention}", embed=review_embed, view=review_view)
         except Exception as e:
             logger.error(f"Failed to send admin review message: {e}")
-
+ 
 # Instantiate the bot
 bot = TicketBot()
-
+ 
 # ----------------- Commands -----------------
-
+ 
 @bot.tree.command(name="setup_tickets", description="Sends the ticket creation panel to the current channel.")
 @app_commands.default_permissions(administrator=True)
 async def setup_tickets_command(interaction: discord.Interaction):
     guild = interaction.guild
     embed = discord.Embed(
-        title="📩 Clan Application Portal / Портал заявок в клан",
-        description=(
-            "Welcome! If you want to join our Roblox Bedwars clan, please create an application ticket.\n\n"
-            "Добро пожаловать! Если вы хотите вступить в наш клан по Roblox Bedwars, пожалуйста, создайте тикет заявки.\n\n"
-            "👉 Click the button below / Нажмите кнопку ниже"
-        ),
+        title="⚔️ Join A Clan",
+        description=get_requirements_description(guild),
         color=discord.Color.purple()
     )
     embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
-    embed.set_footer(text="Clan Application System • Click below to start")
+    embed.set_footer(text="Clan Application System")
     
-    view = TicketPanelView()
+    file = None
+    if os.path.exists("atowu2.gif"):
+        file = discord.File("atowu2.gif", filename="atowu2.gif")
+        embed.set_image(url="attachment://atowu2.gif")
+        
+    view = TicketPanelView(guild=guild)
     await interaction.response.send_message("Ticket panel spawned!", ephemeral=True)
-    await interaction.channel.send(embed=embed, view=view)
+    if file:
+        await interaction.channel.send(embed=embed, file=file, view=view)
+    else:
+        await interaction.channel.send(embed=embed, view=view)
 
 @bot.tree.command(name="close", description="Closes the ticket and deletes the channel.")
 async def close_command(interaction: discord.Interaction):
     await handle_close_ticket(interaction)
+
+@bot.tree.command(name="list_emojis", description="Lists all custom emojis in the server with their raw format.")
+@app_commands.default_permissions(administrator=True)
+async def list_emojis_command(interaction: discord.Interaction):
+    if not interaction.guild.emojis:
+        await interaction.response.send_message("No custom emojis found in this server.", ephemeral=True)
+        return
+    
+    emoji_list = []
+    for emoji in interaction.guild.emojis:
+        emoji_list.append(f"`<:{emoji.name}:{emoji.id}>` -> {emoji}")
+    
+    message_text = "\n".join(emoji_list)
+    if len(message_text) > 2000:
+        await interaction.response.send_message("Too many emojis to display in one message.", ephemeral=True)
+    else:
+        await interaction.response.send_message(message_text, ephemeral=True)
 
 # ----------------- Keep Alive Web Server (Render Hosting) -----------------
 
