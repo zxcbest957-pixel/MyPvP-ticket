@@ -960,6 +960,7 @@ class TicketBot(commands.Bot):
 
         # Fetch details and language from memory or state
         lang = state.get("lang", "en")
+        clan = state.get("clan", "MyPvP")
         strings = LOCALIZATION[lang]
         details = self.ticket_usernames.get(channel.id)
         if details:
@@ -994,7 +995,8 @@ class TicketBot(commands.Bot):
             weekly_contrib=weekly_contrib,
             status="Under Review",
             lang=lang,
-            image_url=attachment.url
+            image_url=attachment.url,
+            clan=clan
         )
         asyncio.create_task(edit_channel_topic_safe(channel, new_topic))
 
